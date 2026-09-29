@@ -1,0 +1,41 @@
+name: update-smoothscroll
+
+# 跨仓库触发需要额外 token, 这里改为定时轮询上游最新 Release; 发版后也可手动触发:
+#   gh workflow run update-smoothscroll.yml -R renpengkai/homebrew-tap
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bump cask to latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cask=Casks/smoothscroll.rb
+          tag=$(gh release view --repo renpengkai/smooth-scroll-mac --json tagName -q .tagName)
+          version="${tag#v}"
+          current=$(sed -nE 's/^  version "([^"]+)"/\1/p' "$cask")
+          if [[ "$version" == "$current" ]]; then
+            echo "already at $version"
+            exit 0
+          fi
+          url="https://github.com/renpengkai/smooth-scroll-mac/releases/download/${tag}/SmoothScroll-${version}.zip"
+          sha=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
+          sed -i -E \
+            -e "s/^  version \".*\"/  version \"${version}\"/" \
+            -e "s/^  sha256 \".*\"/  sha256 \"${sha}\"/" \
+            "$cask"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "smoothscroll ${version}"
+          git push
