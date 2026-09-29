@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   update:
@@ -39,3 +40,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -am "smoothscroll ${version}"
           git push
+          # GITHUB_TOKEN 推送的提交不会触发 push 事件的工作流, 需显式触发安装测试
+          gh workflow run tests.yml --ref main
