@@ -13,14 +13,16 @@ cask "smoothscroll" do
   end
 
   depends_on arch: :arm64
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "SmoothScroll.app"
 
+  # steps 块在独立 DSL 中求值, 取不到 appdir, 需在外面先算好路径
+  installed_app = "#{appdir}/SmoothScroll.app"
+
   # 未公证的 ad-hoc 签名包, 去掉隔离属性后才能直接打开
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/SmoothScroll.app"]
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", installed_app]
   end
 
   uninstall quit: "io.github.renpengkai.smoothscroll"
