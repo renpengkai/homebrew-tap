@@ -1,0 +1,30 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  smoothscroll:
+    runs-on: macos-15
+    steps:
+      - name: Set up Homebrew (taps this repository)
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - run: brew style --cask renpengkai/tap/smoothscroll
+      - run: brew audit --cask --online renpengkai/tap/smoothscroll
+
+      - name: Install
+        run: |
+          brew install --cask renpengkai/tap/smoothscroll
+          test -d /Applications/SmoothScroll.app
+          codesign --verify --strict /Applications/SmoothScroll.app
+          # postflight_steps 应已去掉隔离属性
+          if xattr -p com.apple.quarantine /Applications/SmoothScroll.app 2>/dev/null; then
+            echo "quarantine attribute still present" >&2
+            exit 1
+          fi
+
+      - run: brew uninstall --cask renpengkai/tap/smoothscroll
