@@ -28,3 +28,26 @@ jobs:
           fi
 
       - run: brew uninstall --cask renpengkai/tap/smoothscroll
+
+  macmonitor:
+    runs-on: macos-15
+    steps:
+      - name: Set up Homebrew (taps this repository)
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - run: brew style --cask renpengkai/tap/macmonitor
+      - run: brew audit --cask --online renpengkai/tap/macmonitor
+
+      - name: Install
+        run: |
+          brew install --cask renpengkai/tap/macmonitor
+          test -d /Applications/MacMonitor.app
+          codesign --verify --strict /Applications/MacMonitor.app
+          test -x /Applications/MacMonitor.app/Contents/MacOS/mmfanctl
+          # postflight_steps 应已去掉隔离属性
+          if xattr -p com.apple.quarantine /Applications/MacMonitor.app 2>/dev/null; then
+            echo "quarantine attribute still present" >&2
+            exit 1
+          fi
+
+      - run: brew uninstall --cask renpengkai/tap/macmonitor
