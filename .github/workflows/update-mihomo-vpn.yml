@@ -1,0 +1,52 @@
+name: update-mihomo-vpn
+
+# 定时轮询上游最新 Release; 发版后也可手动触发:
+#   gh workflow run update-mihomo-vpn.yml -R renpengkai/homebrew-tap
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 */6 * * *"
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bump cask to latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cask=Casks/mihomo-vpn.rb
+          tag=$(gh release view --repo renpengkai/MihomoVPN --json tagName -q .tagName)
+          version="${tag#v}"
+          current=$(sed -nE 's/^  version "([^"]+)"/\1/p' "$cask")
+          if [[ "$version" == "$current" ]]; then
+            # 仍刷新 sha, 防止占位符未替换
+            url="https://github.com/renpengkai/MihomoVPN/releases/download/${tag}/MihomoVPN-${version}.zip"
+            sha=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
+            old=$(sed -nE 's/^  sha256 "([^"]+)"/\1/p' "$cask")
+            if [[ "$sha" == "$old" ]]; then
+              echo "already at $version ($sha)"
+              exit 0
+            fi
+          else
+            url="https://github.com/renpengkai/MihomoVPN/releases/download/${tag}/MihomoVPN-${version}.zip"
+            sha=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
+          fi
+          sed -i -E \
+            -e "s/^  version \".*\"/  version \"${version}\"/" \
+            -e "s/^  sha256 \".*\"/  sha256 \"${sha}\"/" \
+            "$cask"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$cask"
+          git diff --cached --quiet && exit 0
+          git commit -m "mihomo-vpn ${version}"
+          git push
+          gh workflow run tests.yml --ref main || true
