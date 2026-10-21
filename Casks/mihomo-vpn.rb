@@ -1,6 +1,6 @@
 cask "mihomo-vpn" do
-  version "0.1.1"
-  sha256 "8df1ca525da3348718ab4a83334d03838b1e4861622cd34b10be40a7f1418dba"
+  version "0.1.2"
+  sha256 "98e465174e4e408753a246c5f424eef6fb3fea5f8dc22431b24ef4904a7b0ba9"
 
   url "https://github.com/renpengkai/MihomoVPN/releases/download/v#{version}/MihomoVPN-#{version}.zip"
   name "Mihomo VPN"
