@@ -1,6 +1,6 @@
 cask "smoothscroll" do
-  version "0.3.1"
-  sha256 "40bc97422c3142c881464611f1d2b4e017be573627793384e9507196bf9a9fef"
+  version "0.4.0"
+  sha256 "93d6a08c84dc7f3f05d89ecfb9e13de7164153721472415d4e97e5fee82bab2d"
 
   url "https://github.com/renpengkai/smooth-scroll-mac/releases/download/v#{version}/SmoothScroll-#{version}.zip"
   name "SmoothScroll"
